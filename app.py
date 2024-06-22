@@ -114,14 +114,21 @@ def compute_prob_single(text, tokenizer, model):
     return int(prob[1] * 100)
 
 
-def paraphrase_single(text, tokenizer, model, beams=5, grams=4, do_sample=True):
-    # x = tokenizer(text, return_tensors='pt', padding=True).to(model.device)
-    # max_size = int(x.input_ids.shape[1] * 1.5 + 10)
-    # out = model.generate(**x, encoder_no_repeat_ngram_size=grams, do_sample=do_sample, num_beams=beams,
-    #                      max_length=max_size, no_repeat_ngram_size=4, )
+def paraphrase_single(text, tokenizer, model, lang='en', num_sentences=3, beams=5, grams=4):
+    if lang != 'en':
+        x = tokenizer(text, return_tensors='pt', padding=True).to(model.device)
+        max_size = int(x.input_ids.shape[1] * 1.5 + 10)
+
+        generated_sentences = []
+        for i in range(num_sentences):
+            out = model.generate(**x, encoder_no_repeat_ngram_size=grams, do_sample=True, num_beams=beams,
+                                 max_length=max_size, no_repeat_ngram_size=4, )
+            generated_sentences.append(tokenizer.decode(out[0], skip_special_tokens=True))
+
+        return generated_sentences
 
 
-    encoding = tokenizer.encode_plus(text, pad_to_max_length=True, return_tensors="pt")
+    encoding = tokenizer.encode_plus(text, padding=True, truncation=True, pad_to_max_length=True, return_tensors="pt")
     input_ids, attention_masks = encoding["input_ids"].to(device), encoding["attention_mask"].to(device)
 
     beam_outputs = model.generate(
@@ -130,8 +137,8 @@ def paraphrase_single(text, tokenizer, model, beams=5, grams=4, do_sample=True):
         max_length=int(int(input_ids.shape[1] * 1.5 + 10)),
         top_k=120,
         top_p=0.98,
-        early_stopping=True,
-        num_return_sequences=2
+        beams=beams,
+        num_return_sequences=num_sentences
     )
 
     final_outputs = []
@@ -146,16 +153,20 @@ def paraphrase_single(text, tokenizer, model, beams=5, grams=4, do_sample=True):
 
 
 def inference_single(text, num_paraphrases=3):
-    cur_model, cur_tokenizer = atd_model, atd_tokenizer
-    if chardet.detect(text.encode('cp1251'))['language'] != 'Russian':
-        cur_model, cur_tokenizer = en_model, en_tokenizer
+    res = chardet.detect(text.encode('cp1251'))
+    lang = 'en'
 
-    sec_model, sec_tokenizer = par_model, par_tokenizer
-    if chardet.detect(text.encode('cp1251'))['language'] != 'Russian':
-        sec_model, sec_tokenizer = par_en_model, par_en_tokenizer
+    cur_model, cur_tokenizer = en_model, en_tokenizer
+    if res['language'] == 'Russian' and res['confidence'] > 0.95:
+        cur_model, cur_tokenizer = atd_model, atd_tokenizer
+        lang = 'ru'
+
+    sec_model, sec_tokenizer = par_en_model, par_en_tokenizer
+    if res['language'] == 'Russian' and res['confidence'] > 0.95:
+        sec_model, sec_tokenizer = par_model, par_tokenizer
 
     basic_prob = compute_prob_single(text, cur_tokenizer, cur_model)
-    paraphrases = [paraphrase_single(text, sec_tokenizer, sec_model) for i in range(num_paraphrases)]
+    paraphrases = paraphrase_single(text, sec_tokenizer, sec_model, lang=lang, num_sentences=num_paraphrases)
     probabilities = [compute_prob_single(par, cur_tokenizer, cur_model) for par in paraphrases]
 
     both = list(zip(paraphrases, probabilities))
@@ -181,10 +192,11 @@ def inference_probability(request: InferenceRequest):
     if not text:
         raise HTTPException(status_code=400, detail="Input text is required")
 
-    if chardet.detect(text.encode('cp1251'))['language'] != 'Russian':
-        prob = compute_prob_single(text, en_tokenizer, en_model)
-    else:
+    res = chardet.detect(text.encode('cp1251'))
+    if res['language'] == 'Russian' and res['confidence'] > 0.95:
         prob = compute_prob_single(text, atd_tokenizer, atd_model)
+    else:
+        prob = compute_prob_single(text, en_tokenizer, en_model)
 
     return ProbInferenceResponse(prob=prob)
 
