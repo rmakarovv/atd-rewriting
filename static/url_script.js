@@ -19,10 +19,10 @@ async function analyzeUrl() {
     if (response.ok) {
         output.innerHTML = `
             <p>Initial text: ${result.text}</p>
-            <p>Probability of AI-generated text: ${result.prob}%</p>
+            <p>Score: ${result.prob}</p>
             <p>Paraphrases and their probabilities:</p>
             <ul>
-                ${result.paraphrases.map((paraphrase, index) => `<li>${paraphrase} (Probability: ${result.probabilities[index]}%)</li>`).join('')}
+                ${result.paraphrases.map((paraphrase, index) => `<li>${paraphrase} (Score: ${result.probabilities[index]})</li>`).join('')}
             </ul>
         `;
     } else {

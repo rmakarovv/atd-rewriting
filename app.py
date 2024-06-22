@@ -1,4 +1,5 @@
 import torch
+import chardet
 import requests
 import numpy as np
 
@@ -16,7 +17,6 @@ from transformers import BertForSequenceClassification, BertTokenizer
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 from bs4 import BeautifulSoup
-
 
 # Disable warnings
 logging.set_verbosity_warning()
@@ -45,12 +45,13 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-atd_model, atd_tokenizer, par_model, par_tokenizer = None, None, None, None
+atd_model, atd_tokenizer, par_model, par_tokenizer, en_tokenizer, en_model = None, None, None, None, None, None
+
 
 # Load model and tokenizer
 @app.on_event("startup")
 def load_model():
-    global atd_model, atd_tokenizer, par_model, par_tokenizer
+    global atd_model, atd_tokenizer, par_model, par_tokenizer, en_tokenizer, en_model
     atd_tokenizer = BertTokenizer.from_pretrained(ATD_MODEL_NAME)
     atd_model = BertForSequenceClassification.from_pretrained(ATD_MODEL_NAME)
     atd_model.load_state_dict(torch.load(ATD_MODEL_PATH))
@@ -117,9 +118,13 @@ def paraphrase_single(text, tokenizer, model, beams=5, grams=4, do_sample=True):
 
 
 def inference_single(text, num_paraphrases=3):
-    basic_prob = compute_prob_single(text, atd_tokenizer, atd_model)
+    cur_model, cur_tokenizer = atd_model, atd_tokenizer
+    if chardet.detect(text.encode('cp1251'))['language'] != 'Russian':
+        cur_model, cur_tokenizer = en_model, en_tokenizer
+
+    basic_prob = compute_prob_single(text, cur_tokenizer, cur_model)
     paraphrases = [paraphrase_single(text, par_tokenizer, par_model) for i in range(num_paraphrases)]
-    probabilities = [compute_prob_single(par, atd_tokenizer, atd_model) for par in paraphrases]
+    probabilities = [compute_prob_single(par, cur_tokenizer, cur_model) for par in paraphrases]
 
     both = list(zip(paraphrases, probabilities))
     both.sort(key=lambda x: x[1])
@@ -137,14 +142,20 @@ def get_inference(request: InferenceRequest):
     prob, paraphrases, probabilities = inference_single(text)
     return InferenceResponse(prob=prob, paraphrases=paraphrases, probabilities=probabilities)
 
+
 @app.post('/inference_prob', response_model=ProbInferenceResponse)
 def inference_probability(request: InferenceRequest):
     text = request.text
     if not text:
         raise HTTPException(status_code=400, detail="Input text is required")
 
-    prob = compute_prob_single(text, atd_tokenizer, atd_model)
+    if chardet.detect(text.encode('cp1251'))['language'] != 'Russian':
+        prob = compute_prob_single(text, en_tokenizer, en_model)
+    else:
+        prob = compute_prob_single(text, atd_tokenizer, atd_model)
+
     return ProbInferenceResponse(prob=prob)
+
 
 @app.post('/inference_change', response_model=InferenceResponse)
 def inference_change(request: InferenceRequest):

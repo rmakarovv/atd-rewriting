@@ -3,3 +3,5 @@ pydantic
 fastapi
 transformers
 bs4
+chardet
+sentencepiece
