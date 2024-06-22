@@ -208,6 +208,7 @@ def inference_change(request: InferenceRequest):
         raise HTTPException(status_code=400, detail="Input text is required")
 
     prob, paraphrases, probabilities = inference_single(text)
+    print(text, prob, paraphrases, probabilities )
     return InferenceResponse(prob=prob, paraphrases=paraphrases, probabilities=probabilities)
 
 

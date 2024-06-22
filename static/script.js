@@ -5,6 +5,10 @@ async function compute() {
         return;
     }
 
+    // Clear output fields
+    document.getElementById('output').innerText = '';
+    document.getElementById('paraphrases').innerHTML = '';
+
     const response = await fetch('http://localhost:8000/inference_prob', {
         method: 'POST',
         headers: {
@@ -29,6 +33,10 @@ async function change() {
         return;
     }
 
+    // Clear output fields
+    document.getElementById('output').innerText = '';
+    document.getElementById('paraphrases').innerHTML = '';
+
     const response = await fetch('http://localhost:8000/inference_change', {
         method: 'POST',
         headers: {
@@ -46,11 +54,9 @@ async function change() {
 
     document.getElementById('output').innerText = `Initial text score: ${result.prob}`;
 
-//    let paraphrasesHTML = '<h3>Rewritings and their scores:</h3><ul>';
     let paraphrasesHTML = '';
     result.paraphrases.forEach((paraphrase, index) => {
         paraphrasesHTML += `<b> Score: </b> ${result.probabilities[index]} <br> <li>${paraphrase}</li> <br>`;
     });
-    paraphrasesHTML += '</ul>';
     document.getElementById('paraphrases').innerHTML = paraphrasesHTML;
 }

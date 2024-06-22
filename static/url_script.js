@@ -5,6 +5,9 @@ async function analyzeUrl() {
         return;
     }
 
+    // Clear output fields  
+    document.getElementById('url-output').innerText = '';
+
     const response = await fetch('http://localhost:8000/analyze_url', {
         method: 'POST',
         headers: {
@@ -15,6 +18,7 @@ async function analyzeUrl() {
 
     const result = await response.json();
     const output = document.getElementById('url-output');
+
 
     if (response.ok) {
         output.innerHTML = `
