@@ -54,9 +54,11 @@ async function change() {
 
     document.getElementById('output').innerText = `Initial text score: ${result.prob}`;
 
+    // let paraphrasesHTML = '<h3>Rewritings and their scores:</h3><ul>';
     let paraphrasesHTML = '';
     result.paraphrases.forEach((paraphrase, index) => {
         paraphrasesHTML += `<b> Score: </b> ${result.probabilities[index]} <br> <li>${paraphrase}</li> <br>`;
     });
+    // paraphrasesHTML += '</ul>';
     document.getElementById('paraphrases').innerHTML = paraphrasesHTML;
 }
