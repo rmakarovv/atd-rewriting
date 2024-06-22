@@ -6,6 +6,7 @@ import numpy as np
 from pydantic import BaseModel
 
 import uvicorn
+from fastapi import Request
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,13 +46,12 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 atd_model, atd_tokenizer, par_model, par_tokenizer, en_tokenizer, en_model = None, None, None, None, None, None
-par_en_tokenizer, par_en_model = None, None
-device = 'cpu'
+
 
 # Load model and tokenizer
 @app.on_event("startup")
 def load_model():
-    global atd_model, atd_tokenizer, par_model, par_tokenizer, en_tokenizer, en_model, par_en_tokenizer, par_en_model
+    global atd_model, atd_tokenizer, par_model, par_tokenizer, en_tokenizer, en_model
     atd_tokenizer = BertTokenizer.from_pretrained(ATD_MODEL_NAME)
     atd_model = BertForSequenceClassification.from_pretrained(ATD_MODEL_NAME)
     atd_model.load_state_dict(torch.load(ATD_MODEL_PATH))
@@ -62,17 +62,12 @@ def load_model():
     par_model = T5ForConditionalGeneration.from_pretrained(PAR_MODEL_NAME)
     par_tokenizer = T5Tokenizer.from_pretrained(PAR_MODEL_NAME)
 
-    par_en_model = T5ForConditionalGeneration.from_pretrained('ramsrigouthamg/t5_paraphraser')
-    par_en_tokenizer = T5Tokenizer.from_pretrained('ramsrigouthamg/t5_paraphraser')
-
     atd_model.eval()
     par_model.eval()
 
     if torch.cuda.is_available():
         atd_model.cuda()
         par_model.cuda()
-        par_en_model.cuda()
-        device = 'cuda'
 
 
 class InferenceRequest(BaseModel):
@@ -115,34 +110,11 @@ def compute_prob_single(text, tokenizer, model):
 
 
 def paraphrase_single(text, tokenizer, model, beams=5, grams=4, do_sample=True):
-    # x = tokenizer(text, return_tensors='pt', padding=True).to(model.device)
-    # max_size = int(x.input_ids.shape[1] * 1.5 + 10)
-    # out = model.generate(**x, encoder_no_repeat_ngram_size=grams, do_sample=do_sample, num_beams=beams,
-    #                      max_length=max_size, no_repeat_ngram_size=4, )
-
-
-    encoding = tokenizer.encode_plus(text, pad_to_max_length=True, return_tensors="pt")
-    input_ids, attention_masks = encoding["input_ids"].to(device), encoding["attention_mask"].to(device)
-
-    beam_outputs = model.generate(
-        input_ids=input_ids, attention_mask=attention_masks,
-        do_sample=True,
-        max_length=int(int(input_ids.shape[1] * 1.5 + 10)),
-        top_k=120,
-        top_p=0.98,
-        early_stopping=True,
-        num_return_sequences=2
-    )
-
-    final_outputs = []
-    for beam_output in beam_outputs:
-        sent = tokenizer.decode(beam_output, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-        if sent.lower() != text.lower() and sent not in final_outputs:
-            final_outputs.append(sent)
-
-    return final_outputs
-
-    # return tokenizer.decode(out[0], skip_special_tokens=True)
+    x = tokenizer(text, return_tensors='pt', padding=True).to(model.device)
+    max_size = int(x.input_ids.shape[1] * 1.5 + 10)
+    out = model.generate(**x, encoder_no_repeat_ngram_size=grams, do_sample=do_sample, num_beams=beams,
+                         max_length=max_size, no_repeat_ngram_size=4, )
+    return tokenizer.decode(out[0], skip_special_tokens=True)
 
 
 def inference_single(text, num_paraphrases=3):
@@ -150,12 +122,8 @@ def inference_single(text, num_paraphrases=3):
     if chardet.detect(text.encode('cp1251'))['language'] != 'Russian':
         cur_model, cur_tokenizer = en_model, en_tokenizer
 
-    sec_model, sec_tokenizer = par_model, par_tokenizer
-    if chardet.detect(text.encode('cp1251'))['language'] != 'Russian':
-        sec_model, sec_tokenizer = par_en_model, par_en_tokenizer
-
     basic_prob = compute_prob_single(text, cur_tokenizer, cur_model)
-    paraphrases = [paraphrase_single(text, sec_tokenizer, sec_model) for i in range(num_paraphrases)]
+    paraphrases = [paraphrase_single(text, par_tokenizer, par_model) for i in range(num_paraphrases)]
     probabilities = [compute_prob_single(par, cur_tokenizer, cur_model) for par in paraphrases]
 
     both = list(zip(paraphrases, probabilities))
