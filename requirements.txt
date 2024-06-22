@@ -8,3 +8,4 @@ sentencepiece
 lxml
 readability-lxml
 lxml_html_clean
+nltk
