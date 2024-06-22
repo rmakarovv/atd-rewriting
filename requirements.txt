@@ -5,3 +5,6 @@ transformers
 bs4
 chardet
 sentencepiece
+lxml
+readability-lxml
+lxml_html_clean

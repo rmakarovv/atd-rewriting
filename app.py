@@ -4,7 +4,7 @@ import requests
 import numpy as np
 
 from pydantic import BaseModel
-
+from readability import Document
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -212,6 +212,34 @@ def inference_change(request: InferenceRequest):
     return InferenceResponse(prob=prob, paraphrases=paraphrases, probabilities=probabilities)
 
 
+# @app.post("/analyze_url", response_model=UrlInferenceResponse)
+# async def analyze_url(request: InferenceRequest):
+#     url = request.text.strip()
+
+#     if not url:
+#         raise HTTPException(status_code=400, detail="URL is required")
+
+#     try:
+#         page = requests.get(url)
+#         soup = BeautifulSoup(page.content, 'html.parser')
+#         text = soup.get_text(separator=' ', strip=True)
+
+#         print(text)
+
+#         if not text:
+#             raise HTTPException(status_code=400, detail="No text found on the page")
+
+#         # TODO: update the context length
+#         if len(text) > 500:
+#             text = text[:500]
+
+#         prob, paraphrases, probabilities = inference_single(text, num_paraphrases=1)
+#         return UrlInferenceResponse(text=text, prob=prob, paraphrases=paraphrases, probabilities=probabilities)
+
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+    
+
 @app.post("/analyze_url", response_model=UrlInferenceResponse)
 async def analyze_url(request: InferenceRequest):
     url = request.text.strip()
@@ -221,18 +249,14 @@ async def analyze_url(request: InferenceRequest):
 
     try:
         page = requests.get(url)
-        soup = BeautifulSoup(page.content, 'html.parser')
+        doc = Document(page.content)
+        text = doc.summary()
+        soup = BeautifulSoup(text, 'html.parser')
         text = soup.get_text(separator=' ', strip=True)
-
-        print(text)
 
         if not text:
             raise HTTPException(status_code=400, detail="No text found on the page")
-
-        # TODO: update the context length
-        if len(text) > 500:
-            text = text[:500]
-
+        
         prob, paraphrases, probabilities = inference_single(text, num_paraphrases=1)
         return UrlInferenceResponse(text=text, prob=prob, paraphrases=paraphrases, probabilities=probabilities)
 
