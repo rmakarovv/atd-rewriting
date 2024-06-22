@@ -3,9 +3,9 @@ import chardet
 import requests
 import numpy as np
 
+import uvicorn
 from pydantic import BaseModel
 from readability import Document
-import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -44,9 +44,8 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-atd_model, atd_tokenizer, par_model, par_tokenizer, en_tokenizer, en_model = None, None, None, None, None, None
-par_en_tokenizer, par_en_model = None, None
-device = 'cpu'
+atd_model, atd_tokenizer, par_model, par_tokenizer = None, None, None, None
+en_tokenizer, en_model, par_en_tokenizer, par_en_model = None, None, None, None
 
 # Load model and tokenizer
 @app.on_event("startup")
@@ -72,7 +71,6 @@ def load_model():
         atd_model.cuda()
         par_model.cuda()
         par_en_model.cuda()
-        device = 'cuda'
 
 
 class InferenceRequest(BaseModel):
@@ -103,7 +101,7 @@ def softmax(x):
 
 
 def compute_prob_single(text, tokenizer, model):
-    tokens = tokenizer(text, return_tensors='pt')
+    tokens = tokenizer(text, truncation=True, return_tensors='pt')
     tokens = {k: v.to(model.device) for k, v in tokens.items()}
 
     with torch.no_grad():
@@ -129,7 +127,7 @@ def paraphrase_single(text, tokenizer, model, lang='en', num_sentences=3, beams=
 
 
     encoding = tokenizer.encode_plus(text, padding=True, truncation=True, pad_to_max_length=True, return_tensors="pt")
-    input_ids, attention_masks = encoding["input_ids"].to(device), encoding["attention_mask"].to(device)
+    input_ids, attention_masks = encoding["input_ids"].to(model.device), encoding["attention_mask"].to(model.device)
 
     beam_outputs = model.generate(
         input_ids=input_ids, attention_mask=attention_masks,
@@ -137,7 +135,7 @@ def paraphrase_single(text, tokenizer, model, lang='en', num_sentences=3, beams=
         max_length=int(int(input_ids.shape[1] * 1.5 + 10)),
         top_k=120,
         top_p=0.98,
-        beams=beams,
+        num_beams=beams,
         num_return_sequences=num_sentences
     )
 
@@ -148,8 +146,6 @@ def paraphrase_single(text, tokenizer, model, lang='en', num_sentences=3, beams=
             final_outputs.append(sent)
 
     return final_outputs
-
-    # return tokenizer.decode(out[0], skip_special_tokens=True)
 
 
 def inference_single(text, num_paraphrases=3):
@@ -210,34 +206,6 @@ def inference_change(request: InferenceRequest):
     prob, paraphrases, probabilities = inference_single(text)
     print(text, prob, paraphrases, probabilities )
     return InferenceResponse(prob=prob, paraphrases=paraphrases, probabilities=probabilities)
-
-
-# @app.post("/analyze_url", response_model=UrlInferenceResponse)
-# async def analyze_url(request: InferenceRequest):
-#     url = request.text.strip()
-
-#     if not url:
-#         raise HTTPException(status_code=400, detail="URL is required")
-
-#     try:
-#         page = requests.get(url)
-#         soup = BeautifulSoup(page.content, 'html.parser')
-#         text = soup.get_text(separator=' ', strip=True)
-
-#         print(text)
-
-#         if not text:
-#             raise HTTPException(status_code=400, detail="No text found on the page")
-
-#         # TODO: update the context length
-#         if len(text) > 500:
-#             text = text[:500]
-
-#         prob, paraphrases, probabilities = inference_single(text, num_paraphrases=1)
-#         return UrlInferenceResponse(text=text, prob=prob, paraphrases=paraphrases, probabilities=probabilities)
-
-#     except Exception as e:
-#         raise HTTPException(status_code=400, detail=str(e))
     
 
 @app.post("/analyze_url", response_model=UrlInferenceResponse)
