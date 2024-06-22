@@ -4,27 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI URL Analyzer</title>
-    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <header>
-        <h1>AI URL Analyzer</h1>
-    </header>
-    <main>
-        <section class="image-section">
-            <img src="robot_writing.jpg" alt="Robot Writing on Laptop">
-        </section>
-        <div class="button-container">
-            <a href="index.html">Analyze text</a>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+
+    <header class="bg-gradient-to-r from-indigo-700 to-pink-400 text-white py-6 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center px-6">
+            <h1 class="text-4xl font-bold">AI URL Analyzer</h1>
         </div>
-        <section class="input-section">
-            <input type="text" id="input-url" placeholder="Enter URL to analyze">
-            <div class="button-container">
-                <button onclick="analyzeUrl()">Compute score</button>
+    </header>
+
+    <main class="container mx-auto my-10 px-6 grid grid-cols-1 gap-6">
+        <section class="input-section bg-white p-8 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-semibold mb-4">Analyze URL</h2>
+            <input type="text" id="input-url" class="w-full p-4 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter URL to analyze">
+            <div class="button-container flex justify-end">
+                <button onclick="analyzeUrl()" class="bg-pink-400 text-white font-semibold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                    Compute Score
+                </button>
             </div>
-            <div id="url-output"></div>
+        </section>
+        <section class="result-section bg-white p-8 rounded-lg shadow-lg col-span-1 md:col-span-2">
+            <h2 class="text-2xl font-semibold mb-4">Result</h2>
+            <div id="output" class="p-4 bg-gray-100 rounded-lg shadow-inner"></div>
+        </section>
+        <section class="bg-white p-8 rounded-lg shadow-lg col-span-1 md:col-span-2">
+            <h2 class="text-2xl font-semibold mb-4">Analyze and rewrite text</h2>
+            <div class="flex justify-center">
+                <a href="index.html" class="bg-gradient-to-r from-blue-500 to-indigo-700 text-white font-semibold px-5 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                    Go to Text Analyzer
+                </a>
+            </div>
         </section>
     </main>
+
     <script src="url_script.js"></script>
 </body>
 </html>

@@ -4,33 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Text Detector</title>
-    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <header>
-        <h1>AI Text Detector</h1>
-    </header>
-    <main>
-        <section class="image-section">
-            <img src="robot_writing.jpg" alt="Robot Writing on Laptop">
-        </section>
-        <div class="button-container">
-            <a href="url_analyzer.html">Analyze Website Text from URL</a>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+
+    <header class="bg-gradient-to-r from-blue-500 to-indigo-700 text-white py-6 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center px-6">
+            <h1 class="text-4xl font-bold">AI Text Detector</h1>
         </div>
-        <section class="input-section">
-            <textarea id="input-text">В 2012 году систематически не хватает средств на оплату услуг ЖКХ и содержание жилого фонда.
- На сегодняшний день задолженность населения по оплате жилищно-коммунальных платежей составляет свыше 1 миллиарда рублей. В 2013 г она может составить более 2,2 млрд руб., а в 2014 - 420 млн долл США, что является самым высоким показателем с 2009 года! За счет этого население вынуждено оплачивать коммунальные услуги через посредников (посредников). При этом тарифы для жителей остаются прежними или повышаются за счёт повышения цен поставщиков ресурсов: воды – 5%, электроэнергии — 6%; газа газ.</textarea><br>
-            <div class="button-container">
-                <button onclick="compute()">Compute score</button>
-                <button onclick="change()">Rewrite text</button>
+    </header>
+
+    <main class="container mx-auto my-10 px-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section class="input-section bg-white p-8 rounded-lg shadow-lg col-span-1 md:col-span-2">
+            <h2 class="text-2xl font-semibold mb-4">Analyze Text</h2>
+            <textarea id="input-text" class="w-full p-4 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="10" placeholder="Enter text here...">
+В 2012 году систематически не хватает средств на оплату услуг ЖКХ и содержание жилого фонда.
+На сегодняшний день задолженность населения по оплате жилищно-коммунальных платежей составляет свыше 1 миллиарда рублей. В 2013 г она может составить более 2,2 млрд руб., а в 2014 - 420 млн долл США, что является самым высоким показателем с 2009 года! За счет этого население вынуждено оплачивать коммунальные услуги через посредников (посредников). При этом тарифы для жителей остаются прежними или повышаются за счёт повышения цен поставщиков ресурсов: воды – 5%, электроэнергии — 6%; газа газ.
+            </textarea>
+            <div class="button-container flex justify-end space-x-4">
+                <button onclick="compute()" class="bg-blue-500 text-white font-semibold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                    Compute Score
+                </button>
+                <button onclick="change()" class="bg-indigo-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                    Rewrite Text
+                </button>
             </div>
-            <div id="output"></div>
-            <div id="paraphrases"></div>
+        </section>
+
+        <section class="result-section bg-white p-8 rounded-lg shadow-lg col-span-1 md:col-span-2">
+            <h2 class="text-2xl font-semibold mb-4">Result</h2>
+            <div id="output" class="p-4 bg-gray-100 rounded-lg shadow-inner"></div>
+            <div id="paraphrases" class="mt-6 p-4 bg-gray-100 rounded-lg shadow-inner"></div>
+        </section>
+
+        <section class="bg-white p-8 rounded-lg shadow-lg col-span-1 md:col-span-2">
+            <h2 class="text-2xl font-semibold mb-4">Analyze Website Text from URL</h2>
+            <div class="flex justify-center">
+                <a href="url_analyzer.html" class="bg-gradient-to-r from-indigo-700 to-pink-400 text-white font-semibold px-5 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                    Go to URL Analyzer
+                </a>
+            </div>
         </section>
     </main>
-    <!-- <footer>
-        <p>&copy; 2024 AI Text Detector. All rights reserved.</p>
-    </footer> -->
+
     <script src="script.js"></script>
 </body>
 </html>
