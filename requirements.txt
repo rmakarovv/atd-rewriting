@@ -1,0 +1,5 @@
+torch
+pydantic
+fastapi
+transformers
+bs4
