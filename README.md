@@ -54,9 +54,9 @@ python3 app.py
 
 ### Шаг 4: Использование API
 
-Откройте веб-браузер и перейдите по адресу `http://localhost:8000/static/index.html`. Взаимодействие возможно через веб-приложение или через `POST` запросы 
+Откройте веб-браузер и перейдите по адресу [http://localhost:8000/static/index.html](http://localhost:8000/static/index.html). Взаимодействие возможно через веб-приложение или через `POST` запросы.
 
-Для выполнения инференса через POST запросы используйте маршрут `POST /inference_prob` или `POST /inference_change` и передайте текст для анализа.
+Для выполнения инференса через POST запросы используйте маршрут `POST /inference_prob` или `POST /inference_change` и передайте текст для анализа. Для анализа текста с Веб-сайта используйте `POST /analyze_url` и передайте URL (формат json {text: URL}).
 
 ### Пример работы модели:
 ![Screenshot from 2024-06-22 17-21-41](https://github.com/rmakarovv/atd-rewriting/assets/82258730/db141a94-7c2a-47e1-bb9e-bde96dc3d468)
