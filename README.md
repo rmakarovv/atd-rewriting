@@ -61,6 +61,15 @@ python3 app.py
 ### Пример работы модели:
 ![Screenshot from 2024-06-22 17-21-41](https://github.com/rmakarovv/atd-rewriting/assets/82258730/db141a94-7c2a-47e1-bb9e-bde96dc3d468)
 
+### Качество работы модели (с текстами на английском языке)
+
+Название текста поделено на 2 цвета - красный (написан ИИ) и зеленый (написан человеком). Красно-зеленый цвет означает, что текст написан человеком + ИИ.
+
+![Screenshot from 2024-06-23 09-55-34](https://github.com/rmakarovv/atd-rewriting/assets/82258730/4814cdb2-17db-486e-91d7-a66a7d53f821)
+
+![Screenshot from 2024-06-23 09-55-38](https://github.com/rmakarovv/atd-rewriting/assets/82258730/07bde954-5376-4e4a-861a-c823743233a7)
+
+
 ## Связаться с нами:
 
 - [@RomanMakarov](https://t.me/RomanMakar0v)
