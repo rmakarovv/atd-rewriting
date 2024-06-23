@@ -69,11 +69,14 @@ def load_model():
     par_en_tokenizer = T5Tokenizer.from_pretrained('ramsrigouthamg/t5_paraphraser')
 
     atd_model.eval()
+    en_model.eval()
     par_model.eval()
+    par_en_model.eval()
 
     if torch.cuda.is_available():
         atd_model.cuda()
         par_model.cuda()
+        en_model.cuda()
         par_en_model.cuda()
 
 
